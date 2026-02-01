@@ -1,6 +1,30 @@
 <!DOCTYPE html>
 <html lang="es">
-<head><script src="script.js" defer></script>
+<head>
+  <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBGDSPE3AlDnOUstepSlXm56DxSYDBJwkA",
+    authDomain: "freekie-games.firebaseapp.com",
+    projectId: "freekie-games",
+    storageBucket: "freekie-games.firebasestorage.app",
+    messagingSenderId: "756123313733",
+    appId: "1:756123313733:web:9ed8394e8c529738dc652c",
+    measurementId: "G-Q1QND2K76P"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+  <script src="script.js" defer></script>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -2881,5 +2905,6 @@ ctx.fillRect(0, 0, 200, 200);
 
 </body>
 </html>
+
 
 
