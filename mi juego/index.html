@@ -2905,11 +2905,122 @@ ctx.fillRect(0, 0, 200, 200);
     game: 'FreekieAdventure',
     debug_mode: true
 });
+    // ===== MEJORA DE CONTROLES MÓVILES =====
+// Detectar dispositivo móvil
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+           ('ontouchstart' in window) || 
+           (navigator.maxTouchPoints > 0);
+}
+
+// Centrar canvas en dispositivos móviles
+function centerGameOnMobile() {
+    if (isMobileDevice()) {
+        const gameCanvas = document.getElementById('gameCanvas');
+        if (gameCanvas) {
+            gameCanvas.style.position = 'absolute';
+            gameCanvas.style.top = '50%';
+            gameCanvas.style.left = '50%';
+            gameCanvas.style.transform = 'translate(-50%, -50%)';
+            
+            // Ajustar tamaño para pantallas pequeñas
+            const maxWidth = window.innerWidth * 0.95;
+            const maxHeight = window.innerHeight * 0.85;
+            gameCanvas.style.maxWidth = maxWidth + 'px';
+            gameCanvas.style.maxHeight = maxHeight + 'px';
+        }
+        
+        // Asegurar que los controles estén visibles
+        const mobileControls = document.querySelector('.mobile-controls');
+        if (mobileControls) {
+            mobileControls.style.display = 'block';
+        }
+    }
+}
+
+// Mejorar controles táctiles con soporte multi-touch
+function enhanceMobileControls() {
+    if (!isMobileDevice()) return;
+    
+    // Agregar eventos touch para mejor respuesta
+    const dpadButtons = document.querySelectorAll('.dpad-btn');
+    dpadButtons.forEach(btn => {
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+        
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+    });
+    
+    // Botón de acción
+    const actionBtn = document.getElementById('actionBtn');
+    if (actionBtn) {
+        actionBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+    }
+}
+
+// Vibración en dispositivos compatibles
+function addHapticFeedback() {
+    if ('vibrate' in navigator) {
+        const buttons = document.querySelectorAll('.dpad-btn, .action-btn-mobile, .btn, .action-btn, .move-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('touchstart', () => {
+                navigator.vibrate(20); // Vibración corta de 20ms
+            });
+        });
+    }
+}
+
+// Ajustar vista al girar pantalla
+window.addEventListener('orientationchange', () => {
+    if (isMobileDevice()) {
+        setTimeout(() => {
+            centerGameOnMobile();
+            if (gameState.screen === 'overworldMap' && canvas) {
+                canvas.width = window.innerWidth * 0.9;
+                canvas.height = window.innerHeight * 0.85;
+                renderMap();
+            }
+        }, 300);
+    }
+});
+
+// Inicializar mejoras móviles
+window.addEventListener('load', () => {
+    centerGameOnMobile();
+    enhanceMobileControls();
+    addHapticFeedback();
+});
+
+// Forzar modo móvil para pruebas (opcional)
+function forceMobileMode() {
+    const mobileControls = document.querySelector('.mobile-controls');
+    if (mobileControls) {
+        mobileControls.style.display = 'block';
+    }
+    centerGameOnMobile();
+}
+
+// Descomenta la línea de abajo para forzar modo móvil en pruebas
+// window.addEventListener('load', forceMobileMode);
+
+console.log('✅ Controles móviles mejorados');
+console.log('✅ Detección automática de dispositivo móvil');
+console.log('✅ Vibración táctil activada');
+console.log('✅ Ajuste automático al girar pantalla');
 
   </script>
 
 </body>
 </html>
+
 
 
 
