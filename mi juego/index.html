@@ -6041,11 +6041,305 @@ console.log('✅ Ajuste automático al girar pantalla');
 
 
 
-
+// ===== AGREGAR CONTROLES TÁCTILES (FLECHAS + JOYSTICK) =====
+(function() {
+    // Crear controles táctiles si no existen
+    function createMobileControls() {
+        // Verificar si ya existen
+        let mobileControls = document.querySelector('.mobile-controls');
+        
+        if (!mobileControls) {
+            // Crear contenedor de controles
+            mobileControls = document.createElement('div');
+            mobileControls.className = 'mobile-controls';
+            mobileControls.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                width: 100%;
+                z-index: 10000;
+                pointer-events: none;
+                display: block !important;
+            `;
+            
+            // Crear D-Pad (flechas)
+            const dpad = document.createElement('div');
+            dpad.className = 'mobile-dpad';
+            dpad.style.cssText = `
+                position: absolute;
+                left: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                pointer-events: auto;
+            `;
+            
+            // Flecha ARRIBA
+            const upBtn = document.createElement('div');
+            upBtn.id = 'dpadUp';
+            upBtn.className = 'dpad-btn';
+            upBtn.textContent = '↑';
+            upBtn.style.cssText = `
+                width: 65px;
+                height: 65px;
+                background: rgba(50, 60, 80, 0.85);
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                border-radius: 16px;
+                margin: 5px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 32px;
+                color: #ffd700;
+                font-weight: bold;
+                touch-action: manipulation;
+                user-select: none;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+                cursor: pointer;
+            `;
+            
+            // Flecha IZQUIERDA
+            const leftBtn = document.createElement('div');
+            leftBtn.id = 'dpadLeft';
+            leftBtn.className = 'dpad-btn';
+            leftBtn.textContent = '←';
+            leftBtn.style.cssText = upBtn.style.cssText;
+            
+            // Flecha DERECHA
+            const rightBtn = document.createElement('div');
+            rightBtn.id = 'dpadRight';
+            rightBtn.className = 'dpad-btn';
+            rightBtn.textContent = '→';
+            rightBtn.style.cssText = upBtn.style.cssText;
+            
+            // Flecha ABAJO
+            const downBtn = document.createElement('div');
+            downBtn.id = 'dpadDown';
+            downBtn.className = 'dpad-btn';
+            downBtn.textContent = '↓';
+            downBtn.style.cssText = upBtn.style.cssText;
+            
+            // Fila de flechas izquierda/derecha
+            const row = document.createElement('div');
+            row.className = 'dpad-row';
+            row.style.cssText = 'display: flex; gap: 8px;';
+            row.appendChild(leftBtn);
+            row.appendChild(rightBtn);
+            
+            // Agregar flechas al D-Pad
+            dpad.appendChild(upBtn);
+            dpad.appendChild(row);
+            dpad.appendChild(downBtn);
+            
+            // Crear botón de acción (joystick/atacar)
+            const actionBtn = document.createElement('div');
+            actionBtn.id = 'actionBtn';
+            actionBtn.className = 'action-btn-mobile';
+            actionBtn.textContent = '⚔️';
+            actionBtn.style.cssText = `
+                position: absolute;
+                right: 20px;
+                bottom: 20px;
+                width: 80px;
+                height: 80px;
+                background: linear-gradient(135deg, rgba(255, 80, 80, 0.9) 0%, rgba(220, 40, 40, 0.9) 100%);
+                border: 4px solid rgba(255, 255, 255, 0.4);
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 36px;
+                color: white;
+                box-shadow: 
+                    0 6px 25px rgba(255, 0, 0, 0.6),
+                    inset 0 -4px 15px rgba(0, 0, 0, 0.4);
+                pointer-events: auto;
+                touch-action: manipulation;
+                user-select: none;
+                cursor: pointer;
+                animation: pulseBtn 1.5s infinite;
+            `;
+            
+            // Agregar estilos CSS para animación
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulseBtn {
+                    0%, 100% { transform: scale(1); box-shadow: 0 6px 25px rgba(255, 0, 0, 0.6), inset 0 -4px 15px rgba(0, 0, 0, 0.4); }
+                    50% { transform: scale(1.05); box-shadow: 0 8px 35px rgba(255, 0, 0, 0.8), inset 0 -4px 15px rgba(0, 0, 0, 0.4); }
+                }
+                .dpad-btn:active {
+                    background: rgba(80, 120, 180, 0.95) !important;
+                    transform: scale(0.92);
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+                }
+                .action-btn-mobile:active {
+                    transform: scale(0.9);
+                    box-shadow: 0 4px 20px rgba(255, 0, 0, 0.7);
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Agregar todo al contenedor
+            mobileControls.appendChild(dpad);
+            mobileControls.appendChild(actionBtn);
+            
+            // Insertar en el body
+            document.body.appendChild(mobileControls);
+            
+            console.log('✅ Controles táctiles creados');
+        }
+        
+        // Forzar visibilidad
+        mobileControls.style.display = 'block !important';
+        mobileControls.style.opacity = '1';
+        
+        return mobileControls;
+    }
+    
+    // Conectar eventos touch a las teclas del juego
+    function setupTouchControls() {
+        // Flecha ARRIBA - tecla W
+        const upBtn = document.getElementById('dpadUp');
+        if (upBtn) {
+            upBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys.w = true;
+            }, { passive: false });
+            upBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys.w = false;
+            }, { passive: false });
+            upBtn.addEventListener('mousedown', () => keys.w = true);
+            upBtn.addEventListener('mouseup', () => keys.w = false);
+            upBtn.addEventListener('mouseleave', () => keys.w = false);
+        }
+        
+        // Flecha ABAJO - tecla S
+        const downBtn = document.getElementById('dpadDown');
+        if (downBtn) {
+            downBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys.s = true;
+            }, { passive: false });
+            downBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys.s = false;
+            }, { passive: false });
+            downBtn.addEventListener('mousedown', () => keys.s = true);
+            downBtn.addEventListener('mouseup', () => keys.s = false);
+            downBtn.addEventListener('mouseleave', () => keys.s = false);
+        }
+        
+        // Flecha IZQUIERDA - tecla A
+        const leftBtn = document.getElementById('dpadLeft');
+        if (leftBtn) {
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys.a = true;
+            }, { passive: false });
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys.a = false;
+            }, { passive: false });
+            leftBtn.addEventListener('mousedown', () => keys.a = true);
+            leftBtn.addEventListener('mouseup', () => keys.a = false);
+            leftBtn.addEventListener('mouseleave', () => keys.a = false);
+        }
+        
+        // Flecha DERECHA - tecla D
+        const rightBtn = document.getElementById('dpadRight');
+        if (rightBtn) {
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys.d = true;
+            }, { passive: false });
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys.d = false;
+            }, { passive: false });
+            rightBtn.addEventListener('mousedown', () => keys.d = true);
+            rightBtn.addEventListener('mouseup', () => keys.d = false);
+            rightBtn.addEventListener('mouseleave', () => keys.d = false);
+        }
+        
+        // Botón de acción - Espacio/combate
+        const actionBtn = document.getElementById('actionBtn');
+        if (actionBtn) {
+            actionBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState.screen === 'overworldMap') {
+                    triggerWildEncounter();
+                }
+            }, { passive: false });
+            actionBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                if (gameState.screen === 'overworldMap') {
+                    triggerWildEncounter();
+                }
+            });
+        }
+        
+        console.log('✅ Eventos touch configurados');
+    }
+    
+    // Detectar si es dispositivo móvil
+    function isMobile() {
+        return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               ('ontouchstart' in window) || 
+               (navigator.maxTouchPoints > 0);
+    }
+    
+    // Inicializar controles
+    function initMobileControls() {
+        if (isMobile()) {
+            console.log('📱 Dispositivo móvil detectado');
+            createMobileControls();
+            setupTouchControls();
+            
+            // Prevenir comportamiento predeterminado del scroll
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.closest('.mobile-controls')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Vibración al tocar (si está disponible)
+            if ('vibrate' in navigator) {
+                document.querySelectorAll('.dpad-btn, .action-btn-mobile').forEach(btn => {
+                    btn.addEventListener('touchstart', () => {
+                        navigator.vibrate(30);
+                    });
+                });
+            }
+            
+            console.log('🎮 Controles táctiles activados para móvil');
+        } else {
+            // En PC, mostrar controles para pruebas
+            createMobileControls();
+            setupTouchControls();
+            console.log('💻 Controles táctiles creados (modo PC)');
+        }
+    }
+    
+    // Forzar activación inmediata
+    window.addEventListener('load', () => {
+        setTimeout(initMobileControls, 500);
+    });
+    
+    // También activar cuando el canvas esté listo
+    setTimeout(() => {
+        initMobileControls();
+    }, 1000);
+    
+    // Función para forzar activación manual (para debugging)
+    window.showMobileControls = initMobileControls;
+    
+    console.log('✅ Script de controles táctiles cargado');
+})();
   </script>
 
 </body>
 </html>
+
 
 
 
