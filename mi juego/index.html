@@ -6783,10 +6783,277 @@ console.log('✅ Ajuste automático al girar pantalla');
     
     console.log('✅ Script de fixes móviles cargado');
 })();
+  // ===== FIX COMPLETO PARA MÓVIL - CENTRADO + CONTROLES VISIBLES + BOTONES COMBATE =====
+(function() {
+    // 1. FORZAR VISIBILIDAD DE CONTROLES Y CENTRAR CANVAS
+    function fixMobileLayout() {
+        // Centrar canvas del overworld
+        const gameCanvas = document.getElementById('gameCanvas');
+        if (gameCanvas) {
+            gameCanvas.style.position = 'absolute';
+            gameCanvas.style.top = '50%';
+            gameCanvas.style.left = '50%';
+            gameCanvas.style.transform = 'translate(-50%, -50%)';
+            gameCanvas.style.maxWidth = '95vw';
+            gameCanvas.style.maxHeight = '80vh';
+        }
+        
+        // Forzar visibilidad de controles móviles
+        const mobileControls = document.querySelector('.mobile-controls');
+        if (mobileControls) {
+            mobileControls.style.display = 'block !important';
+            mobileControls.style.opacity = '1 !important';
+            mobileControls.style.zIndex = '10000';
+            
+            // Asegurar que las flechas sean visibles
+            const dpadBtns = document.querySelectorAll('.dpad-btn');
+            dpadBtns.forEach(btn => {
+                btn.style.background = 'linear-gradient(135deg, rgba(50, 60, 80, 0.95) 0%, rgba(70, 80, 100, 0.95) 100%)';
+                btn.style.border = '3px solid rgba(255, 255, 255, 0.5)';
+                btn.style.color = '#ffd700';
+                btn.style.fontSize = '32px';
+                btn.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.6)';
+            });
+            
+            // Asegurar que el botón de acción sea visible
+            const actionBtn = document.querySelector('.action-btn-mobile');
+            if (actionBtn) {
+                actionBtn.style.background = 'linear-gradient(135deg, rgba(255, 80, 80, 0.95) 0%, rgba(220, 40, 40, 0.95) 100%)';
+                actionBtn.style.border = '4px solid rgba(255, 255, 255, 0.6)';
+                actionBtn.style.boxShadow = '0 8px 30px rgba(255, 0, 0, 0.7), inset 0 -5px 20px rgba(0, 0, 0, 0.5)';
+                actionBtn.style.animation = 'pulseBtn 1.5s infinite';
+            }
+        }
+    }
+    
+    // 2. CREAR BOTONES TÁCTILES PARA COMBATE (NO EXISTEN)
+    function createBattleTouchControls() {
+        const battleScreen = document.getElementById('battleScreen');
+        if (!battleScreen) return;
+        
+        // Verificar si ya existen
+        let battleTouchControls = document.querySelector('.battle-touch-controls');
+        if (!battleTouchControls) {
+            battleTouchControls = document.createElement('div');
+            battleTouchControls.className = 'battle-touch-controls';
+            battleTouchControls.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 95%;
+                max-width: 500px;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                z-index: 10000;
+                pointer-events: none;
+            `;
+            
+            // Botón ATAQUE grande
+            const attackBtn = document.createElement('button');
+            attackBtn.id = 'battleAttackBtn';
+            attackBtn.innerHTML = '⚔️ ATAQUE';
+            attackBtn.style.cssText = `
+                width: 100%;
+                padding: 25px;
+                font-size: 1.8em;
+                font-weight: 700;
+                background: linear-gradient(135deg, rgba(229, 57, 53, 0.95) 0%, rgba(198, 40, 40, 0.95) 100%);
+                border: 3px solid rgba(255, 255, 255, 0.4);
+                border-radius: 25px;
+                color: white;
+                cursor: pointer;
+                pointer-events: auto;
+                touch-action: manipulation;
+                box-shadow: 0 8px 35px rgba(229, 57, 53, 0.6);
+                transition: all 0.2s ease;
+            `;
+            
+            // Botón HABILIDAD
+            const specialBtn = document.createElement('button');
+            specialBtn.id = 'battleSpecialBtn';
+            specialBtn.innerHTML = '✨ HABILIDAD';
+            specialBtn.style.cssText = attackBtn.style.cssText;
+            specialBtn.style.background = 'linear-gradient(135deg, rgba(142, 36, 170, 0.95) 0%, rgba(106, 44, 164, 0.95) 100%)';
+            specialBtn.style.boxShadow = '0 8px 35px rgba(142, 36, 170, 0.6)';
+            
+            // Botón MOCHILA
+            const itemBtn = document.createElement('button');
+            itemBtn.id = 'battleItemBtn';
+            itemBtn.innerHTML = '🎒 MOCHILA';
+            itemBtn.style.cssText = attackBtn.style.cssText;
+            itemBtn.style.background = 'linear-gradient(135deg, rgba(21, 101, 192, 0.95) 0%, rgba(13, 71, 161, 0.95) 100%)';
+            itemBtn.style.boxShadow = '0 8px 35px rgba(21, 101, 192, 0.6)';
+            
+            // Botón HUIR
+            const fleeBtn = document.createElement('button');
+            fleeBtn.id = 'battleFleeBtn';
+            fleeBtn.innerHTML = '🏃 HUIR';
+            fleeBtn.style.cssText = attackBtn.style.cssText;
+            fleeBtn.style.background = 'linear-gradient(135deg, rgba(97, 97, 97, 0.95) 0%, rgba(66, 66, 66, 0.95) 100%)';
+            fleeBtn.style.boxShadow = '0 8px 35px rgba(97, 97, 97, 0.6)';
+            
+            battleTouchControls.appendChild(attackBtn);
+            battleTouchControls.appendChild(specialBtn);
+            battleTouchControls.appendChild(itemBtn);
+            battleTouchControls.appendChild(fleeBtn);
+            battleScreen.appendChild(battleTouchControls);
+        }
+        
+        // Mostrar/Ocultar según pantalla
+        battleTouchControls.style.display = (gameState.screen === 'battleScreen') ? 'flex' : 'none';
+    }
+    
+    // 3. CONECTAR EVENTOS TOUCH A FUNCIONES EXISTENTES
+    function setupTouchEvents() {
+        // Flechas del D-PAD
+        const dpadUp = document.getElementById('dpadUp');
+        const dpadDown = document.getElementById('dpadDown');
+        const dpadLeft = document.getElementById('dpadLeft');
+        const dpadRight = document.getElementById('dpadRight');
+        const actionBtn = document.getElementById('actionBtn');
+        
+        if (dpadUp) {
+            dpadUp.addEventListener('touchstart', (e) => { e.preventDefault(); keys.w = true; }, { passive: false });
+            dpadUp.addEventListener('touchend', (e) => { e.preventDefault(); keys.w = false; }, { passive: false });
+        }
+        
+        if (dpadDown) {
+            dpadDown.addEventListener('touchstart', (e) => { e.preventDefault(); keys.s = true; }, { passive: false });
+            dpadDown.addEventListener('touchend', (e) => { e.preventDefault(); keys.s = false; }, { passive: false });
+        }
+        
+        if (dpadLeft) {
+            dpadLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys.a = true; }, { passive: false });
+            dpadLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys.a = false; }, { passive: false });
+        }
+        
+        if (dpadRight) {
+            dpadRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys.d = true; }, { passive: false });
+            dpadRight.addEventListener('touchend', (e) => { e.preventDefault(); keys.d = false; }, { passive: false });
+        }
+        
+        if (actionBtn) {
+            actionBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState.screen === 'overworldMap') {
+                    triggerWildEncounter();
+                }
+            }, { passive: false });
+        }
+        
+        // Botones de combate táctiles
+        const battleAttackBtn = document.getElementById('battleAttackBtn');
+        const battleSpecialBtn = document.getElementById('battleSpecialBtn');
+        const battleItemBtn = document.getElementById('battleItemBtn');
+        const battleFleeBtn = document.getElementById('battleFleeBtn');
+        
+        if (battleAttackBtn) {
+            battleAttackBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState.screen === 'battleScreen' && gameState.battle) {
+                    showMoves();
+                }
+            }, { passive: false });
+        }
+        
+        if (battleSpecialBtn) {
+            battleSpecialBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState.screen === 'battleScreen' && gameState.battle) {
+                    useSpecialMove();
+                }
+            }, { passive: false });
+        }
+        
+        if (battleItemBtn) {
+            battleItemBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState.screen === 'battleScreen') {
+                    updateBattleLog('¡No tienes objetos todavía!');
+                }
+            }, { passive: false });
+        }
+        
+        if (battleFleeBtn) {
+            battleFleeBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState.screen === 'battleScreen' && gameState.battle) {
+                    attemptFlee();
+                }
+            }, { passive: false });
+        }
+    }
+    
+    // 4. AJUSTAR TAMAÑO AL GIRAR PANTALLA
+    function handleResize() {
+        fixMobileLayout();
+        createBattleTouchControls();
+        
+        // Ajustar canvas si existe
+        if (gameState.screen === 'overworldMap' && canvas) {
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = window.innerHeight * 0.8;
+            if (typeof renderMap === 'function') renderMap();
+        }
+    }
+    
+    // 5. INICIALIZAR TODO
+    function initMobileFix() {
+        console.log('📱 Iniciando fix para móvil...');
+        
+        // Aplicar fixes
+        fixMobileLayout();
+        createBattleTouchControls();
+        setupTouchEvents();
+        
+        // Agregar eventos
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+        
+        // Vibración si está disponible
+        if ('vibrate' in navigator) {
+            document.querySelectorAll('.dpad-btn, .action-btn-mobile, .battle-touch-controls button').forEach(btn => {
+                btn.addEventListener('touchstart', () => {
+                    navigator.vibrate(30);
+                });
+            });
+        }
+        
+        console.log('✅ Fix para móvil aplicado');
+        console.log('✅ Flechas visibles y funcionales');
+        console.log('✅ Botón de acción visible');
+        console.log('✅ Botones de combate táctiles agregados');
+    }
+    
+    // 6. EJECUTAR AL CARGAR Y CUANDO CAMBIE LA PANTALLA
+    window.addEventListener('load', () => {
+        setTimeout(initMobileFix, 500);
+    });
+    
+    // Hook para cuando cambie de pantalla
+    const originalSwitchScreen = window.switchScreen;
+    window.switchScreen = function(screenId, callback) {
+        originalSwitchScreen(screenId, () => {
+            if (callback) callback();
+            setTimeout(() => {
+                fixMobileLayout();
+                createBattleTouchControls();
+            }, 100);
+        });
+    };
+    
+    // Forzar ejecución inmediata
+    setTimeout(initMobileFix, 1000);
+    
+    console.log('✅ Script de fix móvil cargado');
+})();      
   </script>
 
 </body>
 </html>
+
 
 
 
