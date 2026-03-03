@@ -7935,10 +7935,806 @@ console.log('✅ Ajuste automático al girar pantalla');
   
   window.Haptics = Haptics;
 })();
+      /* ===== AAA ENHANCEMENTS V10.0 ULTRA - CANVAS GAME ===== 
+   Sistema ultra avanzado para juegos canvas
+   - Partículas avanzadas con trails y rotación
+   - Screen effects profesionales (shake, flash, bloom, chromatic)
+   - Leaderboard local guardado
+   - Sistema de combo visual ultra
+   - Effects críticos avanzados
+   - Animaciones de victoria épicas
+   - Audio dinámico
+   - Monitoreo de rendimiento
+   - TODO ENCAPSULADO - COMPATIBLE 100%
+*/
+
+(function AAA_ULTRA_V10() {
+  'use strict';
+  
+  // ===== ADVANCED PARTICLE SYSTEM =====
+  const ParticleEngine = {
+    particles: [],
+    maxParticles: 300,
+    trails: [],
+    maxTrails: 100,
+    
+    emit(x, y, options = {}) {
+      const {
+        type = 'spark',
+        count = 15,
+        velocity = 5,
+        spread = 2 * Math.PI,
+        lifetime = 0.8,
+        color = null
+      } = options;
+      
+      for (let i = 0; i < count; i++) {
+        if (this.particles.length >= this.maxParticles) {
+          this.particles.shift();
+        }
+        
+        const angle = (spread / count) * i + (Math.random() - 0.5) * 0.5;
+        const speed = velocity + Math.random() * (velocity * 0.5);
+        
+        this.particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          ax: (Math.random() - 0.5) * 0.1,
+          ay: 0.15 + Math.random() * 0.1,
+          life: lifetime,
+          maxLife: lifetime,
+          size: Math.random() * 5 + 2,
+          decay: (1 / (lifetime * 60)),
+          type,
+          color: color || this.getColorByType(type),
+          rotation: Math.random() * Math.PI * 2,
+          rotationVel: (Math.random() - 0.5) * 0.2,
+          scale: 1
+        });
+      }
+    },
+    
+    addTrail(x, y, color, size = 3) {
+      if (this.trails.length >= this.maxTrails) {
+        this.trails.shift();
+      }
+      
+      this.trails.push({
+        x, y,
+        life: 1,
+        decay: 0.05,
+        color,
+        size,
+        type: 'trail'
+      });
+    },
+    
+    getColorByType(type) {
+      const colors = {
+        spark: '#FFD700',
+        explosion: '#FF6B35',
+        impact: '#FF5252',
+        heal: '#4CAF50',
+        critical: '#FF00FF',
+        electric: '#00BFFF',
+        water: '#00CED1',
+        fire: '#FF7043',
+        ice: '#B3E5FC'
+      };
+      return colors[type] || colors.spark;
+    },
+    
+    update() {
+      this.particles = this.particles.filter(p => {
+        p.vx += p.ax;
+        p.vy += p.ay;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        p.rotation += p.rotationVel;
+        p.scale = p.life / p.maxLife;
+        
+        return p.life > 0;
+      });
+      
+      this.trails = this.trails.filter(t => {
+        t.life -= t.decay;
+        return t.life > 0;
+      });
+    },
+    
+    render(ctx) {
+      this.trails.forEach(t => {
+        ctx.save();
+        ctx.globalAlpha = t.life * 0.6;
+        ctx.fillStyle = t.color;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.size * (1 - (1 - t.life)), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+      
+      this.particles.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = p.life * 0.85;
+        ctx.fillStyle = p.color;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.scale(p.scale, p.scale);
+        ctx.beginPath();
+        
+        if (p.type === 'trail') {
+          ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+        } else {
+          const sides = 3 + Math.floor(Math.random() * 3);
+          for (let i = 0; i < sides; i++) {
+            const angle = (Math.PI * 2 * i) / sides;
+            const px = Math.cos(angle) * p.size;
+            const py = Math.sin(angle) * p.size;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+        }
+        
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+  };
+  
+  // ===== ADVANCED SCREEN EFFECTS =====
+  const ScreenFX = {
+    shakeIntensity: 0,
+    shakeDecay: 0.92,
+    flashAlpha: 0,
+    flashColor: 'white',
+    chromaShift: 0,
+    bloomIntensity: 0,
+    timeScale: 1,
+    
+    shake(intensity = 15, duration = 200) {
+      this.shakeIntensity = Math.max(this.shakeIntensity, intensity);
+      setTimeout(() => { this.shakeIntensity = 0; }, duration);
+    },
+    
+    flash(color = 'white', duration = 150, intensity = 0.7) {
+      this.flashColor = color;
+      this.flashAlpha = intensity;
+      setTimeout(() => { this.flashAlpha = 0; }, duration);
+    },
+    
+    chromatic(intensity = 0.05, duration = 300) {
+      this.chromaShift = intensity;
+      setTimeout(() => { this.chromaShift = 0; }, duration);
+    },
+    
+    bloom(intensity = 0.8, duration = 400) {
+      this.bloomIntensity = intensity;
+      setTimeout(() => { this.bloomIntensity = 0; }, duration);
+    },
+    
+    slowMo(scale = 0.3, duration = 500) {
+      this.timeScale = scale;
+      setTimeout(() => { this.timeScale = 1; }, duration);
+    },
+    
+    getShakeOffset() {
+      if (this.shakeIntensity < 0.1) {
+        this.shakeIntensity = 0;
+        return { x: 0, y: 0 };
+      }
+      
+      this.shakeIntensity *= this.shakeDecay;
+      return {
+        x: (Math.random() - 0.5) * this.shakeIntensity * 2,
+        y: (Math.random() - 0.5) * this.shakeIntensity * 2
+      };
+    },
+    
+    render(ctx, width, height) {
+      if (this.flashAlpha > 0) {
+        ctx.save();
+        ctx.fillStyle = this.flashColor;
+        ctx.globalAlpha = this.flashAlpha;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+        this.flashAlpha -= 0.04;
+      }
+      
+      if (this.bloomIntensity > 0) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+        ctx.shadowBlur = this.bloomIntensity * 50;
+        ctx.fillStyle = 'rgba(255, 255, 255, ' + (this.bloomIntensity * 0.1) + ')';
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+        this.bloomIntensity -= 0.02;
+      }
+    }
+  };
+  
+  // ===== ADVANCED LEADERBOARD =====
+  const Leaderboard = {
+    scores: [],
+    maxScores: 10,
+    
+    init() {
+      try {
+        const saved = localStorage.getItem('aaa_leaderboard');
+        if (saved) {
+          this.scores = JSON.parse(saved).slice(0, this.maxScores);
+        }
+      } catch(e) {}
+    },
+    
+    addScore(score, name = 'Jugador') {
+      this.scores.push({
+        score,
+        name: name.substring(0, 15),
+        date: new Date().toLocaleDateString(),
+        time: Date.now()
+      });
+      
+      this.scores.sort((a, b) => b.score - a.score);
+      this.scores = this.scores.slice(0, this.maxScores);
+      this.save();
+      
+      return this.getPosition(score);
+    },
+    
+    getPosition(score) {
+      return this.scores.findIndex(s => s.score === score) + 1;
+    },
+    
+    save() {
+      try {
+        localStorage.setItem('aaa_leaderboard', JSON.stringify(this.scores));
+      } catch(e) {}
+    },
+    
+    display() {
+      const overlay = document.getElementById('leaderboard-overlay') || this.createOverlay();
+      overlay.style.display = 'flex';
+    },
+    
+    hide() {
+      const overlay = document.getElementById('leaderboard-overlay');
+      if (overlay) overlay.style.display = 'none';
+    },
+    
+    createOverlay() {
+      const overlay = document.createElement('div');
+      overlay.id = 'leaderboard-overlay';
+      overlay.style = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.9); z-index: 99999;
+        display: none; flex-direction: column; align-items: center;
+        justify-content: center;
+      `;
+      
+      const board = document.createElement('div');
+      board.style = `
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border: 3px solid #FFD700; border-radius: 20px;
+        padding: 40px; max-width: 600px; width: 90%;
+        box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+      `;
+      
+      const title = document.createElement('h2');
+      title.textContent = '🏆 LEADERBOARD 🏆';
+      title.style = `
+        color: #FFD700; text-align: center; margin-bottom: 30px;
+        font-size: 32px; text-shadow: 0 0 20px #FFD700;
+      `;
+      board.appendChild(title);
+      
+      const list = document.createElement('div');
+      list.id = 'leaderboard-list';
+      list.style = `display: flex; flex-direction: column; gap: 12px;`;
+      
+      this.scores.forEach((score, i) => {
+        const row = document.createElement('div');
+        row.style = `
+          display: flex; justify-content: space-between;
+          padding: 15px 20px; background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 10px;
+          font-size: 18px; color: #fff;
+          ${i === 0 ? 'background: rgba(255, 215, 0, 0.2); border-color: #FFD700;' : ''}
+        `;
+        
+        const medal = ['🥇', '🥈', '🥉'];
+        row.innerHTML = `
+          <span>${medal[i] || (i + 1) + '.'} ${score.name}</span>
+          <span style="color: #FFD700; font-weight: bold;">${score.score}</span>
+        `;
+        list.appendChild(row);
+      });
+      
+      board.appendChild(list);
+      
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'CERRAR';
+      closeBtn.style = `
+        margin-top: 30px; padding: 15px 40px;
+        background: linear-gradient(135deg, #FF6B6B, #FF5252);
+        color: white; border: none; border-radius: 10px;
+        font-size: 16px; font-weight: bold; cursor: pointer;
+        transition: all 0.3s ease;
+      `;
+      closeBtn.onclick = () => this.hide();
+      board.appendChild(closeBtn);
+      
+      overlay.appendChild(board);
+      document.body.appendChild(overlay);
+      
+      return overlay;
+    }
+  };
+  
+  // ===== ADVANCED COMBO SYSTEM =====
+  const ComboEngine = {
+    combo: 0,
+    maxCombo: 0,
+    timer: null,
+    display: null,
+    multLevel: 1,
+    
+    init() {
+      const display = document.createElement('div');
+      display.id = 'combo-engine-display';
+      display.style = `
+        position: fixed; top: 80px; right: 30px; z-index: 5000;
+        text-align: right;
+      `;
+      document.body.appendChild(display);
+      this.display = display;
+    },
+    
+    hit(multiplier = 1) {
+      this.combo++;
+      this.maxCombo = Math.max(this.maxCombo, this.combo);
+      this.multLevel = 1 + (this.combo * 0.1);
+      
+      this.updateDisplay();
+      
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.reset(), 4000);
+    },
+    
+    updateDisplay() {
+      if (!this.display) return;
+      
+      const comboColor = this.combo < 5 ? '#FFD700' : this.combo < 10 ? '#FF6B35' : '#FF00FF';
+      
+      this.display.innerHTML = `
+        <div style="
+          font-size: 48px; font-weight: bold; color: ${comboColor};
+          text-shadow: 0 0 20px ${comboColor};
+          animation: comboScale 0.3s ease-out;
+        ">
+          ${this.combo}x COMBO
+        </div>
+        <div style="
+          font-size: 20px; color: ${comboColor};
+          opacity: 0.8; margin-top: 5px;
+        ">
+          x${this.multLevel.toFixed(1)} DMG
+        </div>
+      `;
+    },
+    
+    reset() {
+      this.combo = 0;
+      this.multLevel = 1;
+      if (this.display) this.display.innerHTML = '';
+    },
+    
+    getMultiplier() {
+      return this.multLevel;
+    }
+  };
+  
+  // ===== FLOATING TEXT SYSTEM =====
+  const FloatingText = {
+    texts: [],
+    
+    show(x, y, text, options = {}) {
+      const {
+        color = '#FFD700',
+        size = 24,
+        duration = 1500,
+        velocity = 2,
+        isCritical = false
+      } = options;
+      
+      const el = document.createElement('div');
+      el.style = `
+        position: fixed; left: ${x}px; top: ${y}px;
+        font-size: ${isCritical ? size + 10 : size}px;
+        font-weight: bold; color: ${color};
+        text-shadow: 0 0 ${isCritical ? 15 : 5}px ${color};
+        pointer-events: none; z-index: 5000;
+        font-family: Arial, sans-serif;
+        white-space: nowrap;
+        animation: floatingText ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      `;
+      
+      if (isCritical) {
+        el.style.animation = `floatingTextCritical ${duration}ms ease-out forwards`;
+      }
+      
+      el.textContent = text;
+      document.body.appendChild(el);
+      
+      setTimeout(() => el.remove(), duration);
+    }
+  };
+  
+  // ===== VICTORY ANIMATIONS =====
+  const VictoryFX = {
+    celebrate(score, callback) {
+      ScreenFX.flash('#FFD700', 800, 0.8);
+      ScreenFX.bloom(1, 1000);
+      ScreenFX.shake(25, 600);
+      
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          ParticleEngine.emit(window.innerWidth / 2, window.innerHeight / 2, {
+            type: 'explosion',
+            count: 30,
+            velocity: 8 + Math.random() * 5,
+            lifetime: 2
+          });
+        }, i * 100);
+      }
+      
+      FloatingText.show(
+        window.innerWidth / 2,
+        window.innerHeight / 3,
+        '¡VICTORIA!',
+        {
+          color: '#FFD700',
+          size: 72,
+          duration: 2000,
+          isCritical: true
+        }
+      );
+      
+      FloatingText.show(
+        window.innerWidth / 2,
+        window.innerHeight / 2,
+        `+${score} PUNTOS`,
+        {
+          color: '#4CAF50',
+          size: 48,
+          duration: 2500
+        }
+      );
+      
+      AudioFX.playVictory();
+      if (callback) setTimeout(callback, 2000);
+    },
+    
+    gameOver(finalScore, callback) {
+      ScreenFX.flash('#FF5252', 1000, 0.9);
+      ScreenFX.shake(30, 800);
+      
+      ParticleEngine.emit(window.innerWidth / 2, window.innerHeight / 2, {
+        type: 'impact',
+        count: 40,
+        velocity: 10,
+        lifetime: 1.5
+      });
+      
+      FloatingText.show(
+        window.innerWidth / 2,
+        window.innerHeight / 2.5,
+        'GAME OVER',
+        {
+          color: '#FF5252',
+          size: 64,
+          duration: 2500,
+          isCritical: true
+        }
+      );
+      
+      AudioFX.playGameOver();
+      if (callback) setTimeout(callback, 2000);
+    }
+  };
+  
+  // ===== AUDIO ENGINE =====
+  const AudioFX = {
+    audioContext: null,
+    masterGain: null,
+    
+    init() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.audioContext = new AudioContext();
+        this.masterGain = this.audioContext.createGain();
+        this.masterGain.connect(this.audioContext.destination);
+        this.masterGain.gain.value = 0.2;
+      } catch(e) {
+        console.log('Audio unavailable');
+      }
+    },
+    
+    playTone(freq, duration = 100, type = 'sine', volume = 0.3) {
+      if (!this.audioContext) return;
+      
+      const osc = this.audioContext.createOscillator();
+      const env = this.audioContext.createGain();
+      const now = this.audioContext.currentTime;
+      
+      osc.connect(env);
+      env.connect(this.masterGain);
+      
+      osc.type = type;
+      osc.frequency.value = freq;
+      
+      env.gain.setValueAtTime(volume, now);
+      env.gain.exponentialRampToValueAtTime(0.01, now + duration / 1000);
+      
+      osc.start(now);
+      osc.stop(now + duration / 1000);
+    },
+    
+    playPowerUp() {
+      this.playTone(800, 150, 'sine', 0.3);
+      setTimeout(() => this.playTone(1000, 150, 'sine', 0.3), 100);
+      setTimeout(() => this.playTone(1200, 150, 'sine', 0.3), 200);
+    },
+    
+    playCollect() {
+      this.playTone(600, 100, 'sine', 0.25);
+      setTimeout(() => this.playTone(750, 100, 'sine', 0.25), 80);
+    },
+    
+    playDamage() {
+      this.playTone(150, 100, 'square', 0.25);
+      setTimeout(() => this.playTone(120, 80, 'square', 0.2), 50);
+    },
+    
+    playVictory() {
+      const notes = [659, 784, 988, 1319, 1319];
+      notes.forEach((freq, i) => {
+        setTimeout(() => this.playTone(freq, 200, 'sine', 0.3), i * 150);
+      });
+    },
+    
+    playGameOver() {
+      this.playTone(400, 200, 'sine', 0.3);
+      setTimeout(() => this.playTone(300, 400, 'sine', 0.3), 200);
+    }
+  };
+  
+  // ===== CSS ANIMATIONS =====
+  function injectCSS() {
+    if (document.getElementById('aaa-ultra-css')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'aaa-ultra-css';
+    style.textContent = `
+      @keyframes comboScale {
+        0% { transform: scale(1.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      @keyframes floatingText {
+        0% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-100px); }
+      }
+      
+      @keyframes floatingTextCritical {
+        0% { opacity: 1; transform: translateY(0) scale(1.2); }
+        50% { transform: translateY(-50px) scale(1.3); }
+        100% { opacity: 0; transform: translateY(-120px) scale(0.8); }
+      }
+      
+      @keyframes screenShake {
+        0%, 100% { transform: translate(0, 0); }
+        25% { transform: translate(-2px, -2px); }
+        50% { transform: translate(2px, 2px); }
+        75% { transform: translate(-1px, 2px); }
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+      }
+      
+      @keyframes glow {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.5); }
+      }
+      
+      @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+      }
+      
+      canvas {
+        image-rendering: crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+      }
+      
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // ===== INITIALIZATION =====
+  function initialize() {
+    injectCSS();
+    ParticleEngine.update();
+    AudioFX.init();
+    Leaderboard.init();
+    ComboEngine.init();
+    
+    const updateLoop = () => {
+      ParticleEngine.update();
+      requestAnimationFrame(updateLoop);
+    };
+    updateLoop();
+    
+    window.AAA = {
+      particles: ParticleEngine,
+      effects: ScreenFX,
+      combo: ComboEngine,
+      floatingText: FloatingText,
+      victory: VictoryFX,
+      audio: AudioFX,
+      leaderboard: Leaderboard
+    };
+    
+    console.log('✅ AAA Ultra v10.0 Enhancement System loaded');
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
+})();
+
+/* ===== RESPONSIVE CANVAS SCALING ===== */
+(function CanvasScaling() {
+  'use strict';
+  
+  const canvases = document.querySelectorAll('canvas');
+  
+  function resizeCanvases() {
+    canvases.forEach(canvas => {
+      canvas.style.maxWidth = '100%';
+      canvas.style.maxHeight = '100vh';
+      canvas.style.display = 'block';
+    });
+  }
+  
+  window.addEventListener('resize', resizeCanvases);
+  window.addEventListener('orientationchange', resizeCanvases);
+  
+  setTimeout(resizeCanvases, 100);
+})();
+
+/* ===== ENHANCED BUTTON FEEDBACK ===== */
+(function ButtonFeedback() {
+  'use strict';
+  
+  const style = document.createElement('style');
+  style.textContent = `
+    button {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    
+    button:active::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  `;
+  document.head.appendChild(style);
+  
+  document.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON' && 'vibrate' in navigator) {
+      navigator.vibrate(30);
+    }
+  }, true);
+})();
+
+/* ===== PERFORMANCE MONITORING ===== */
+(function PerfMonitor() {
+  'use strict';
+  
+  const stats = {
+    fps: 60,
+    frameTime: 16,
+    particleCount: 0,
+    lastTime: performance.now(),
+    frameCount: 0
+  };
+  
+  const update = () => {
+    stats.frameCount++;
+    const now = performance.now();
+    const elapsed = now - stats.lastTime;
+    
+    if (elapsed >= 1000) {
+      stats.fps = Math.round((stats.frameCount * 1000) / elapsed);
+      stats.frameCount = 0;
+      stats.lastTime = now;
+    }
+    
+    if (window.AAA && window.AAA.particles) {
+      stats.particleCount = window.AAA.particles.particles.length;
+    }
+    
+    requestAnimationFrame(update);
+  };
+  
+  update();
+  window.PerformanceStats = stats;
+})();
+
+/* ===== MOBILE OPTIMIZATION ===== */
+(function MobileOptimization() {
+  'use strict';
+  
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, false);
+  
+  document.body.style.overscrollBehavior = 'none';
+  
+  document.addEventListener('touchmove', (e) => {
+    if (e.target.tagName === 'CANVAS') {
+      e.preventDefault();
+    }
+  }, { passive: false });
+})();
   </script>
 
 </body>
 </html>
+
 
 
 
