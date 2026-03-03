@@ -7263,11 +7263,683 @@ console.log('✅ Ajuste automático al girar pantalla');
         showExistingControls();
         createBattleTouchControls();
     });
-})();   
+})();
+          /* ===== AAA ENHANCEMENTS V10.0 - POKÉMON-LIKE RPG ===== 
+   Sistema completo de mejoras sin modificar código existente
+   - Efectos visuales avanzados (partículas, animaciones)
+   - Sistema de logros y estadísticas
+   - Combos críticos mejorados
+   - Audio dinámico
+   - UI mejorada
+   - Optimizaciones de rendimiento
+   - Todo encapsulado y compatible
+*/
+
+(function AAA_ENHANCEMENT_V10() {
+  'use strict';
+  
+  // ===== PARTICLE SYSTEM =====
+  const ParticleSystem = {
+    particles: [],
+    maxParticles: 200,
+    canvases: [],
+    
+    init() {
+      // Detectar canvas disponibles
+      this.canvases = [
+        document.getElementById('gameCanvas'),
+        document.getElementById('game'),
+        document.querySelector('canvas')
+      ].filter(c => c && c.getContext);
+      
+      if (this.canvases.length > 0) {
+        setInterval(() => this.updateAll(), 16);
+      }
+    },
+    
+    emit(x, y, type = 'spark', count = 12, canvas = null) {
+      const targetCanvas = canvas || this.canvases[0];
+      if (!targetCanvas) return;
+      
+      for (let i = 0; i < count; i++) {
+        if (this.particles.length >= this.maxParticles) this.particles.shift();
+        
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+        const speed = 2 + Math.random() * 5;
+        
+        this.particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1,
+          decay: 0.01 + Math.random() * 0.02,
+          type,
+          size: type === 'spark' ? 2 : type === 'heal' ? 4 : 3,
+          color: this.getColor(type),
+          gravity: type === 'heal' ? 0.05 : 0.1
+        });
+      }
+    },
+    
+    getColor(type) {
+      const colors = {
+        spark: `hsl(${Math.random() * 60 + 30}, 100%, 60%)`,
+        heal: '#4CAF50',
+        damage: '#FF5252',
+        critical: '#FFD700',
+        status: '#9C27B0',
+        water: '#00BCD4',
+        fire: '#FF7043',
+        grass: '#66BB6A'
+      };
+      return colors[type] || colors.spark;
+    },
+    
+    updateAll() {
+      this.particles = this.particles.filter(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.life -= p.decay;
+        return p.life > 0;
+      });
+      
+      this.canvases.forEach(canvas => {
+        if (canvas && canvas.getContext) {
+          const ctx = canvas.getContext('2d');
+          this.particles.forEach(p => {
+            ctx.save();
+            ctx.globalAlpha = p.life * 0.8;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          });
+        }
+      });
+    }
+  };
+  
+  // ===== SCREEN EFFECTS =====
+  const ScreenEffects = {
+    shakeIntensity: 0,
+    flashAlpha: 0,
+    flashColor: 'white',
+    
+    shake(intensity = 8, duration = 150) {
+      this.shakeIntensity = intensity;
+      setTimeout(() => { this.shakeIntensity = 0; }, duration);
+    },
+    
+    flash(color = 'white', duration = 100) {
+      this.flashColor = color;
+      this.flashAlpha = 0.5;
+      setTimeout(() => { this.flashAlpha = 0; }, duration);
+    },
+    
+    getShakeOffset() {
+      if (this.shakeIntensity <= 0.1) return { x: 0, y: 0 };
+      this.shakeIntensity *= 0.9;
+      return {
+        x: (Math.random() - 0.5) * this.shakeIntensity,
+        y: (Math.random() - 0.5) * this.shakeIntensity
+      };
+    }
+  };
+  
+  // ===== ACHIEVEMENT SYSTEM =====
+  const AchievementSystem = {
+    achievements: {
+      firstBattle: { name: 'Primer Combate', desc: 'Gana tu primer combate', unlocked: false },
+      firstCapture: { name: 'Cazador Novato', desc: 'Captura tu primer Pokémon', unlocked: false },
+      teamOf3: { name: 'Trío Poderoso', desc: 'Entrena 3 Pokémon al nivel 10', unlocked: false },
+      typeExpert: { name: 'Experto de Tipo', desc: 'Captura un Pokémon de cada tipo', unlocked: false },
+      battleWinner: { name: 'Guerrero', desc: 'Gana 10 combates', unlocked: false },
+      criticalHit: { name: 'Golpe Crítico', desc: 'Realiza 5 golpes críticos', unlocked: false },
+      speedRunner: { name: 'Rápido', desc: 'Gana una batalla en menos de 20 segundos', unlocked: false },
+      levelMaster: { name: 'Maestro Nivel', desc: 'Lleva un Pokémon al nivel 20', unlocked: false },
+      shinyCatcher: { name: 'Cazador Brillante', desc: 'Captura 3 Pokémon raros', unlocked: false },
+        allTypes: { name: 'Coleccionista', desc: 'Captura 15 Pokémon diferentes', unlocked: false }
+    },
+    
+    stats: {
+      battles: 0,
+      wins: 0,
+      captures: 0,
+      criticals: 0,
+      totalDamage: 0,
+      playtime: 0,
+      maxLevel: 1,
+      teamCount: 0
+    },
+    
+    init() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('aaa_achievements'));
+        if (saved) {
+          Object.assign(this.achievements, saved.achievements);
+          Object.assign(this.stats, saved.stats);
+        }
+      } catch(e) {}
+      
+      setInterval(() => {
+        this.stats.playtime++;
+        this.save();
+      }, 1000);
+    },
+    
+    unlock(key) {
+      if (this.achievements[key] && !this.achievements[key].unlocked) {
+        this.achievements[key].unlocked = true;
+        this.showNotification(this.achievements[key]);
+        this.save();
+      }
+    },
+    
+    addStat(key, value = 1) {
+      if (this.stats.hasOwnProperty(key)) {
+        this.stats[key] += value;
+        this.checkAchievements();
+        this.save();
+      }
+    },
+    
+    setStat(key, value) {
+      if (this.stats.hasOwnProperty(key)) {
+        this.stats[key] = Math.max(this.stats[key], value);
+        this.checkAchievements();
+        this.save();
+      }
+    },
+    
+    checkAchievements() {
+      if (this.stats.wins === 1) this.unlock('firstBattle');
+      if (this.stats.captures === 1) this.unlock('firstCapture');
+      if (this.stats.wins >= 10) this.unlock('battleWinner');
+      if (this.stats.criticals >= 5) this.unlock('criticalHit');
+      if (this.stats.maxLevel >= 20) this.unlock('levelMaster');
+      if (this.stats.captures >= 15) this.unlock('allTypes');
+    },
+    
+    showNotification(achievement) {
+      const notif = document.createElement('div');
+      notif.style = `
+        position: fixed; top: 30px; right: 30px; z-index: 99999;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        color: #1a1a2e; padding: 25px 35px;
+        border-radius: 15px; box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        font-family: 'Arial', sans-serif; font-size: 14px;
+        text-align: center; max-width: 350px;
+        border: 3px solid #FF8C00;
+        animation: slideInRight 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      `;
+      notif.innerHTML = `
+        <div style="font-weight: bold; font-size: 18px; margin-bottom: 8px;">🏆 LOGRO DESBLOQUEADO</div>
+        <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">${achievement.name}</div>
+        <div style="font-size: 12px; opacity: 0.85;">${achievement.desc}</div>
+      `;
+      document.body.appendChild(notif);
+      
+      setTimeout(() => {
+        notif.style.animation = 'slideOutRight 0.6s ease-in';
+        setTimeout(() => notif.remove(), 600);
+      }, 4000);
+    },
+    
+    save() {
+      try {
+        localStorage.setItem('aaa_achievements', JSON.stringify({
+          achievements: this.achievements,
+          stats: this.stats
+        }));
+      } catch(e) {}
+    }
+  };
+  
+  // ===== COMBO SYSTEM =====
+  const ComboSystem = {
+    comboCount: 0,
+    comboTimer: null,
+    comboDisplay: null,
+    
+    init() {
+      const display = document.createElement('div');
+      display.id = 'aaa-comboDisplay';
+      display.style = `
+        position: fixed; top: 150px; left: 50%; transform: translateX(-50%);
+        font-family: Arial, sans-serif; font-size: 48px; font-weight: bold;
+        color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 60px #FF8C00;
+        opacity: 0; pointer-events: none; z-index: 5000;
+        text-align: center;
+      `;
+      document.body.appendChild(display);
+      this.comboDisplay = display;
+    },
+    
+    hit() {
+      this.comboCount++;
+      
+      if (this.comboDisplay) {
+        this.comboDisplay.textContent = `COMBO x${this.comboCount}`;
+        this.comboDisplay.style.opacity = '1';
+        this.comboDisplay.style.animation = 'none';
+        setTimeout(() => {
+          this.comboDisplay.style.animation = 'pulse 0.3s ease-out';
+        }, 10);
+      }
+      
+      clearTimeout(this.comboTimer);
+      this.comboTimer = setTimeout(() => {
+        if (this.comboCount >= 5) {
+          AchievementSystem.setStat('combos', this.comboCount);
+        }
+        this.reset();
+      }, 3500);
+    },
+    
+    reset() {
+      this.comboCount = 0;
+      if (this.comboDisplay) {
+        this.comboDisplay.style.opacity = '0';
+      }
+    }
+  };
+  
+  // ===== ENHANCED DAMAGE DISPLAY =====
+  const DamageNumbers = {
+    show(x, y, damage, isCritical = false) {
+      const num = document.createElement('div');
+      num.textContent = isCritical ? `${damage}!` : `${damage}`;
+      num.style = `
+        position: fixed; left: ${x}px; top: ${y}px;
+        font-family: Arial, sans-serif; font-weight: bold;
+        font-size: ${isCritical ? 32 : 24}px;
+        color: ${isCritical ? '#FFD700' : '#FF5252'};
+        text-shadow: ${isCritical ? '0 0 20px #FFD700' : '0 0 10px #FF0000'};
+        pointer-events: none; z-index: 5000;
+        animation: ${isCritical ? 'criticalFloat' : 'damageFloat'} 1.2s ease-out forwards;
+      `;
+      
+      document.body.appendChild(num);
+      setTimeout(() => num.remove(), 1200);
+    }
+  };
+  
+  // ===== AUDIO SYSTEM =====
+  const AudioEnhancer = {
+    audioContext: null,
+    masterGain: null,
+    enabled: true,
+    
+    init() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.audioContext = new AudioContext();
+        this.masterGain = this.audioContext.createGain();
+        this.masterGain.connect(this.audioContext.destination);
+        this.masterGain.gain.value = 0.25;
+      } catch(e) {
+        console.log('Audio context unavailable');
+      }
+    },
+    
+    playTone(frequency = 440, duration = 100, type = 'sine', volume = 0.3) {
+      if (!this.audioContext) return;
+      
+      const oscillator = this.audioContext.createOscillator();
+      const envelope = this.audioContext.createGain();
+      
+      oscillator.connect(envelope);
+      envelope.connect(this.masterGain);
+      
+      oscillator.type = type;
+      oscillator.frequency.value = frequency;
+      
+      envelope.gain.setValueAtTime(volume, this.audioContext.currentTime);
+      envelope.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+      
+      oscillator.start(this.audioContext.currentTime);
+      oscillator.stop(this.audioContext.currentTime + duration / 1000);
+    },
+    
+    playAttack() {
+      this.playTone(300, 80, 'square', 0.2);
+      setTimeout(() => this.playTone(250, 60, 'square', 0.15), 40);
+    },
+    
+    playCritical() {
+      this.playTone(900, 150, 'sine', 0.3);
+      setTimeout(() => this.playTone(1200, 100, 'sine', 0.35), 75);
+      setTimeout(() => this.playTone(1500, 80, 'sine', 0.3), 150);
+    },
+    
+    playDamage() {
+      this.playTone(150, 60, 'square', 0.25);
+      setTimeout(() => this.playTone(120, 50, 'square', 0.2), 30);
+    },
+    
+    playHeal() {
+      this.playTone(700, 120, 'sine', 0.25);
+      setTimeout(() => this.playTone(900, 100, 'sine', 0.25), 60);
+    },
+    
+    playCatch() {
+      this.playTone(1200, 100, 'sine', 0.3);
+      setTimeout(() => this.playTone(1400, 100, 'sine', 0.3), 100);
+      setTimeout(() => this.playTone(1600, 150, 'sine', 0.35), 200);
+    },
+    
+    playLevelUp() {
+      const notes = [659, 784, 988, 1319];
+      notes.forEach((freq, i) => {
+        setTimeout(() => this.playTone(freq, 150, 'sine', 0.3), i * 150);
+      });
+    }
+  };
+  
+  // ===== VISUAL EFFECTS HELPER =====
+  const VisualEffects = {
+    addGlow(element, color = '#FF5252', size = 15) {
+      if (!element) return;
+      element.style.boxShadow = `0 0 ${size}px ${color}, inset 0 0 ${size}px ${color}`;
+    },
+    
+    removeGlow(element) {
+      if (element) element.style.boxShadow = '';
+    },
+    
+    pulse(element, duration = 300) {
+      if (!element) return;
+      element.style.animation = `pulse ${duration}ms ease-in-out`;
+      setTimeout(() => { element.style.animation = ''; }, duration);
+    },
+    
+    bounce(element, duration = 400) {
+      if (!element) return;
+      element.style.animation = `bounce ${duration}ms ease-out`;
+      setTimeout(() => { element.style.animation = ''; }, duration);
+    }
+  };
+  
+  // ===== CSS ANIMATIONS INJECTION =====
+  function injectAnimations() {
+    if (document.getElementById('aaa-animations')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'aaa-animations';
+    style.textContent = `
+      @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(400px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      
+      @keyframes slideOutRight {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(400px); }
+      }
+      
+      @keyframes damageFloat {
+        0% { opacity: 1; transform: translateY(0) scale(1); }
+        100% { opacity: 0; transform: translateY(-80px) scale(0.6); }
+      }
+      
+      @keyframes criticalFloat {
+        0% { opacity: 1; transform: translateY(0) scale(1.3); }
+        50% { opacity: 1; transform: translateY(-40px) scale(1.4); }
+        100% { opacity: 0; transform: translateY(-100px) scale(0.8); }
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+      }
+      
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        25% { transform: translateY(-15px); }
+        50% { transform: translateY(0); }
+        75% { transform: translateY(-8px); }
+      }
+      
+      @keyframes glow {
+        0%, 100% { text-shadow: 0 0 10px currentColor; }
+        50% { text-shadow: 0 0 25px currentColor, 0 0 35px currentColor; }
+      }
+      
+      @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+      }
+      
+      @keyframes pixelScale {
+        0% { transform: scale(0.8); opacity: 0; }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      /* UI Improvements */
+      #gameCanvas, #game {
+        image-rendering: crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+      }
+      
+      button {
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      
+      button:hover:not(:disabled) {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5) !important;
+      }
+      
+      button:active:not(:disabled) {
+        transform: translateY(-2px);
+      }
+      
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      
+      /* Mobile optimizations */
+      @media (max-width: 768px) {
+        button {
+          min-height: 50px;
+          font-size: 16px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // ===== BATTLE HOOK SYSTEM =====
+  function hookBattleActions() {
+    // Hook takeDamage if exists
+    const originalTakeDamage = window.takeDamage;
+    if (originalTakeDamage) {
+      window.takeDamage = function(amount, isCritical = false) {
+        const result = originalTakeDamage.call(this, amount, isCritical);
+        
+        if (isCritical) {
+          AudioEnhancer.playCritical();
+          AchievementSystem.addStat('criticals');
+          ComboSystem.hit();
+          ScreenEffects.shake(20, 200);
+          ScreenEffects.flash('#FFD700', 150);
+          ParticleSystem.emit(window.innerWidth / 2, window.innerHeight / 2, 'critical', 15);
+        } else {
+          AudioEnhancer.playDamage();
+          ComboSystem.hit();
+          ScreenEffects.shake(10, 100);
+          ParticleSystem.emit(window.innerWidth / 2, window.innerHeight / 2, 'damage', 8);
+        }
+        
+        AchievementSystem.addStat('totalDamage', amount);
+        DamageNumbers.show(Math.random() * 300 + 200, 150, amount, isCritical);
+        
+        return result;
+      };
+    }
+    
+    // Hook battle win
+    const originalBattleWin = window.battleWon;
+    if (originalBattleWin) {
+      window.battleWon = function(...args) {
+        AchievementSystem.addStat('wins');
+        AudioEnhancer.playLevelUp();
+        ScreenEffects.flash('#4CAF50', 300);
+        ParticleSystem.emit(window.innerWidth / 2, window.innerHeight / 2, 'heal', 20);
+        return originalBattleWin.apply(this, args);
+      };
+    }
+    
+    // Hook capture
+    const originalCapture = window.capturePokemon;
+    if (originalCapture) {
+      window.capturePokemon = function(...args) {
+        AchievementSystem.addStat('captures');
+        AudioEnhancer.playCatch();
+        ScreenEffects.flash('#2196F3', 200);
+        ParticleSystem.emit(window.innerWidth / 2, window.innerHeight / 2, 'spark', 18);
+        return originalCapture.apply(this, args);
+      };
+    }
+  }
+  
+  // ===== INITIALIZATION =====
+  function initialize() {
+    injectAnimations();
+    ParticleSystem.init();
+    AchievementSystem.init();
+    AudioEnhancer.init();
+    ComboSystem.init();
+    hookBattleActions();
+    
+    // Global access for extensions
+    window.AAA = {
+      particles: ParticleSystem,
+      effects: ScreenEffects,
+      visual: VisualEffects,
+      audio: AudioEnhancer,
+      combo: ComboSystem,
+      achievements: AchievementSystem,
+      damage: DamageNumbers
+    };
+    
+    console.log('✅ AAA Enhancement System v10.0 loaded');
+  }
+  
+  // Start initialization
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
+})();
+
+/* ===== PERFORMANCE OPTIMIZER ===== */
+(function PerformanceOptimizations() {
+  'use strict';
+  
+  // Frame rate monitor
+  const FrameMonitor = {
+    fps: 60,
+    lastTime: performance.now(),
+    frames: 0,
+    
+    update() {
+      this.frames++;
+      const now = performance.now();
+      const elapsed = now - this.lastTime;
+      
+      if (elapsed >= 1000) {
+        this.fps = Math.round((this.frames * 1000) / elapsed);
+        this.frames = 0;
+        this.lastTime = now;
+      }
+    }
+  };
+  
+  // Throttle expensive operations
+  const Throttle = {
+    timers: {},
+    
+    do(key, fn, delay = 100) {
+      if (this.timers[key]) return;
+      this.timers[key] = true;
+      fn();
+      setTimeout(() => delete this.timers[key], delay);
+    }
+  };
+  
+  // Request animation frame optimization
+  let rafId = null;
+  const optimizeRender = () => {
+    FrameMonitor.update();
+    rafId = requestAnimationFrame(optimizeRender);
+  };
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(optimizeRender, 100);
+    });
+  } else {
+    setTimeout(optimizeRender, 100);
+  }
+  
+  window.PerformanceOptimizer = { FrameMonitor, Throttle };
+})();
+
+/* ===== MOBILE UX ENHANCEMENTS ===== */
+(function MobileUX() {
+  'use strict';
+  
+  // Haptic feedback helper
+  const Haptics = {
+    tap() {
+      if ('vibrate' in navigator) navigator.vibrate(30);
+    },
+    
+    double() {
+      if ('vibrate' in navigator) navigator.vibrate([40, 30, 40]);
+    },
+    
+    success() {
+      if ('vibrate' in navigator) navigator.vibrate([50, 100, 50]);
+    },
+    
+    warning() {
+      if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+    }
+  };
+  
+  // Button enhancement
+  document.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON') {
+      Haptics.tap();
+    }
+  }, true);
+  
+  // Prevent zoom on double-tap
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, false);
+  
+  window.Haptics = Haptics;
+})();
   </script>
 
 </body>
 </html>
+
 
 
 
